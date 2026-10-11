@@ -25,6 +25,9 @@ class Provider(Base):
     status: Mapped[int] = mapped_column(
         Integer, nullable=False, default=1, comment="1启用 0停用"
     )
+    ico: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True, comment="供应商图标"
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

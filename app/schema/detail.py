@@ -81,25 +81,11 @@ class Detail(BaseModel):
     prices: list[AiModelPrice]
 
 
-# ---- 分页响应 ----
+class AmBase(BaseModel):
 
-class ModelListResponse(BaseModel):
+    id : int
+    name : str
+    ico : Optional[str] = None
 
-    items: list[AiModelBase]
-    total: int
-    page: int
-    page_size: int
-
-
-class ProviderListResponse(BaseModel):
-
-    items: list[AiProvider]
-    total: int
-    page: int
-    page_size: int
-
-
-class ProviderDetailResponse(BaseModel):
-
-    provider: AiProvider
-    models: list[AiModelBase]
+class AmBaseList(BaseModel):
+    items: list[AmBase]

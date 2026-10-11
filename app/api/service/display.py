@@ -1,16 +1,35 @@
 import logging
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from config.db import get_db
-from model import Ai_Model
-from schema import AiModelBase, AiModelCap, AiModelPrice, AiProvider, Detail
+from model import Ai_Model,Provider
+from schema import AiModelBase, AiModelCap, AiModelPrice, AiProvider, Detail, AmBase, AmBaseList
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/service/display", tags=["Display"])
+
+#这个主要是渲染成厂商列表?
+@router.get("/models", response_model=AmBaseList)
+async def index(
+    page : int = Query(1, ge=1),
+    size : int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+) -> AmBaseList:
+    
+    skip = (page - 1) * size
+    query = await db.execute(
+        select(Provider.id, Provider.provider_name, Provider.ico)
+        .where(Provider.status == 1)
+        .offset(skip)
+        .limit(size)
+    )
+    result = query.all()
+    items = [AmBase(id=row.id, name=row.provider_name, ico=row.ico if row.ico is not None else None) for row in result]
+    return AmBaseList(items=items)
 
 
 @router.get("/models/{id}", response_model=Detail)
@@ -52,3 +71,5 @@ async def get_model(
         capabilities=[AiModelCap.model_validate(c) for c in active_caps],
         prices=[AiModelPrice.model_validate(p) for p in valid_prices],
     )
+
+
