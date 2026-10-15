@@ -1,7 +1,10 @@
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 
-load_dotenv()  # Load environment variables from .env file
+# 显式指定 .env 位置（app/.env），避免依赖 cwd 或 dotenv 的隐式向上查找
+load_dotenv(Path(__file__).parents[1] / ".env")
 ASYNC_DATABASE_URL = os.getenv("ASYNC_DATABASE_URL")
 
 if not ASYNC_DATABASE_URL:

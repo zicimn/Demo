@@ -1,10 +1,12 @@
+import os
+
 from sqlalchemy.ext.asyncio import async_sessionmaker,AsyncSession,create_async_engine
 from sqlalchemy.orm import declarative_base
 from config.security import ASYNC_DATABASE_URL
 
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    echo = True,
+    # echo = os.getenv("DB_ECHO", "false").lower() == "true",
     pool_size = 10,
     max_overflow = 20,
     pool_recycle = 3600, #1小时回收

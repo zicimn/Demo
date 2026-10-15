@@ -8,8 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Activate virtual environment (required before any Python commands)
 source .venv/Scripts/activate
 
-# Run the FastAPI development server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Run the FastAPI development server (run from the repository root)
+python app/main.py
+# or equivalently, with app/ as the import root:
+uvicorn main:app --app-dir app --reload --host 0.0.0.0 --port 8000
 
 # Install/update dependencies
 pip install -r requirements.txt
@@ -33,6 +35,20 @@ A FastAPI backend for managing AI model metadata — providers, model specificat
 - **Other:** APScheduler (scheduling), Sentry (error tracking), Cloudinary (media)
 
 ## Architecture
+
+### Import convention (important)
+
+`app/` is the **import root**, not a package — there is no `app/__init__.py`. Top-level
+packages inside it are `api`, `services`, `models`, `schema`, `config`, plus the modules
+`deps.py`, `err.py` and `main.py`.
+
+- Use **absolute imports rooted at `app/`**: `from services.home import HomeService`,
+  `from config.db import Base`, `from err import NotFound`.
+- **Never use parent-relative imports** (`from ..err import ...`). Because `app/` is the
+  import root, `services` is already a top-level package, so `..` goes beyond the
+  top-level package and raises `ImportError: attempted relative import beyond top-level
+  package` at startup. Relative imports *within* the same package (`from .model import X`
+  in `services/__init__.py`) are fine.
 
 ### Directory Layout
 
