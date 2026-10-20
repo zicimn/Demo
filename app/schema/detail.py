@@ -13,8 +13,6 @@ class AiProvider(BaseModel):
     provider_name: str
     website_url: Optional[str] = None
     status: bool
-    created_at: datetime
-    updated_at: datetime
 
 
 class AiModelBase(BaseModel):
@@ -35,15 +33,12 @@ class AiModelBase(BaseModel):
     thinking_note: Optional[str] = None
 
     concurrency_limit: Optional[int] = None
-    status: str
 
     doc_url: Optional[str] = None
     description: Optional[str] = None
 
     provider_id: int
 
-    created_at: datetime
-    updated_at: datetime
 
 
 class AiModelCap(BaseModel):
@@ -51,14 +46,12 @@ class AiModelCap(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    cap_code: str
     cap_name: str
     support_status: str
     is_beta: bool
+    is_active:bool
     note: Optional[str] = None
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
+
 
 
 class AiModelPrice(BaseModel):
@@ -69,8 +62,7 @@ class AiModelPrice(BaseModel):
     price_type: str
     time_period: str
     price: float
-    created_at: datetime
-    updated_at: datetime
+
 
 
 class Detail(BaseModel):
