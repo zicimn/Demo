@@ -6,7 +6,7 @@ from config.security import ASYNC_DATABASE_URL
 
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    # echo = os.getenv("DB_ECHO", "false").lower() == "true",
+    echo = True,
     pool_size = 10,
     max_overflow = 20,
     pool_recycle = 3600, #1小时回收

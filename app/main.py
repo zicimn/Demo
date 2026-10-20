@@ -22,7 +22,7 @@ logging.basicConfig(
 )
 
 # 第三方库的 INFO 日志（如 httpx 的每次请求）太吵，只保留 WARNING 以上
-logging.getLogger("httpx").setLevel(logging.WARNING)
+# logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 @asynccontextmanager
@@ -58,4 +58,10 @@ app.include_router(service_router)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True, reload_excludes=["*.log", "__pycache__/*"])
+    uvicorn.run(
+        "main:app", 
+        reload=True, 
+        log_level="debug",      # uvicorn 自己产生的日志也打到 DEBUG
+        log_config=None,        # 关键：不用 uvicorn 自带的 logging 配置
+        reload_excludes=["*.log", "__pycache__/*"]
+    )
