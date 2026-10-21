@@ -1,9 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from err import NotFound
-from models.provider import Provider
-from schema import AmBase, AmBaseList
+from utils import NotFound,info
+from models import Provider
+from schemas import to_index
 
 
 class HomeService:
@@ -15,7 +15,7 @@ class HomeService:
         self,
         page: int,
         size: int,
-    ) -> AmBaseList:
+    ):
         skip = (page - 1) * size
         query = await self.db.execute(
             select(Provider.id, Provider.provider_name, Provider.ico)
@@ -29,8 +29,5 @@ class HomeService:
         if not result:
             raise NotFound("展示列表为空")
 
-        items = [
-            AmBase(id=row.id, name=row.provider_name, ico=row.ico)
-            for row in result
-        ]
-        return AmBaseList(items=items)
+        items = [ to_index(row) for row in result]
+        return info(data=items)
