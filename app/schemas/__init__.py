@@ -5,7 +5,8 @@ from .prices import(
     to_model_prices
 )
 from .provider import(
-    to_provider
+    to_provider,
+    to_pdetail
 )
 from .detail import(
     to_detail,
