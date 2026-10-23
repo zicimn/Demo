@@ -65,5 +65,8 @@ class Ai_Model(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    # 模型出的时间
+    publish_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
     def __repr__(self) -> str:
         return f"<Ai_Model(id={self.id}, slug='{self.model_slug}')>"
