@@ -1,4 +1,4 @@
-from sqlalchemy import String, DateTime, Integer
+from sqlalchemy import String, DateTime, Integer,TEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from typing import TYPE_CHECKING, Optional
@@ -21,6 +21,9 @@ class Provider(Base):
     )
     website_url: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True, comment="官网/文档地址"
+    )
+    description: Mapped[Optional[str]] = mapped_column(
+        TEXT,nullable=True,comment="模型厂商介绍"
     )
     status: Mapped[int] = mapped_column(
         Integer, nullable=False, default=1, comment="1启用 0停用"
