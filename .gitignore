@@ -7,7 +7,7 @@ app/.env
 run.bat
 .vscode
 
-frontend/node_modules/
+# frontend/node_modules/
 frontend/.nuxt/
 frontend/.output/
 frontend/dist/
