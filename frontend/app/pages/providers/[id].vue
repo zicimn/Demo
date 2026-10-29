@@ -1,59 +1,64 @@
 <script setup lang="ts">
 const route = useRoute();
 const providerId = route.params.id;
+
+useSeoMeta({
+  title: () => `供应商 ${providerId} · AIWiki`,
+});
 </script>
 
 <template>
-  <div class="page-container" style="text-align: center; padding: 60px 20px;">
+  <div class="page-container">
     <h1 class="title">供应商工作台</h1>
-    
-    <div class="info-box">
+
+    <p class="info-box">
       当前正在查看供应商 ID：<strong>{{ providerId }}</strong>
-    </div>
-    
+    </p>
+
     <div class="placeholder-box">
       <h3>🚧 接口开发中</h3>
-      <p>后端目前还没有提供“根据供应商 ID 查询其名下所有模型”的 API 接口。</p>
-      <p>一旦接口上线，这里将为你呈现属于该厂商的各类模型。</p>
+      <p>后端目前还没有提供「根据供应商 ID 查询其名下所有模型」的 API 接口。</p>
+      <p>接口上线后，这里会列出该厂商的模型清单，并跳转到对应的模型详情页。</p>
     </div>
 
-    <div style="margin-top: 32px;">
-      <NuxtLink to="/" class="back-btn">← 返回首页</NuxtLink>
+    <div class="btn-row page-actions">
+      <NuxtLink to="/" class="btn">← 返回首页</NuxtLink>
     </div>
   </div>
 </template>
 
 <style scoped>
 .title {
-  font-size: 2rem;
+  margin: 0 0 24px;
+  font-size: 1.75rem;
   color: #111;
-  margin-bottom: 24px;
 }
 
 .info-box {
-  font-size: 1.2rem;
+  margin: 0 0 32px;
   color: #374151;
-  margin-bottom: 32px;
+  font-size: 1.1rem;
 }
 
 .info-box strong {
-  color: #3b82f6;
-  font-size: 1.5rem;
+  color: #2563eb;
+  font-size: 1.35rem;
 }
 
 .placeholder-box {
-  background: #f3f4f6;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 32px;
   border: 1px dashed #d1d5db;
   border-radius: 12px;
-  padding: 32px;
-  max-width: 500px;
-  margin: 0 auto;
+  background: #f9fafb;
   color: #4b5563;
+  text-align: left;
 }
 
 .placeholder-box h3 {
+  margin: 0 0 16px;
   color: #111;
-  margin-bottom: 16px;
 }
 
 .placeholder-box p {
@@ -61,17 +66,7 @@ const providerId = route.params.id;
   font-size: 0.95rem;
 }
 
-.back-btn {
-  display: inline-block;
-  background: #3b82f6;
-  color: white;
-  padding: 10px 24px;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: background 0.2s;
-}
-
-.back-btn:hover {
-  background: #2563eb;
+.page-actions {
+  margin-top: 32px;
 }
 </style>

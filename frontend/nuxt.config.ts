@@ -20,6 +20,40 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   // ------------------------------------------------------------
+  // css
+  // 全局样式入口。这里的样式对所有页面生效（不受 scoped 限制），
+  // 用来放：CSS 重置、.page-container 这类跨页面复用的容器、
+  // 以及页面切换过渡动画的 class。
+  // 路径里的 ~ 指向 srcDir，Nuxt 4 的 srcDir 就是 app/，
+  // 所以最终解析为 app/assets/css/main.css。
+  // ------------------------------------------------------------
+  css: ['~/assets/css/main.css'],
+
+  // ------------------------------------------------------------
+  // app.head
+  // 全站默认的 <head> 内容。单个页面可以用 useSeoMeta() 覆盖。
+  // ------------------------------------------------------------
+  app: {
+    head: {
+      htmlAttrs: { lang: 'zh-CN' },
+      title: 'AIWiki - AI 模型能力与定价速查',
+      meta: [
+        {
+          name: 'description',
+          content: 'AIWiki：按供应商浏览 AI 模型的能力、上下文长度与定价。',
+        },
+      ],
+    },
+    // ----------------------------------------------------------
+    // pageTransition
+    // 页面切换过渡：mode: 'out-in' 表示旧页面先淡出、新页面再淡入，
+    // 避免两个页面同时存在于 DOM 导致高度剧烈跳动。
+    // name: 'page' 对应 main.css 里的 .page-enter-active 等类名。
+    // ----------------------------------------------------------
+    pageTransition: { name: 'page', mode: 'out-in' },
+  },
+
+  // ------------------------------------------------------------
   // typescript
   // typeCheck: false 表示 dev 和 build 时不做全项目类型检查。
   // 为什么关掉？
@@ -72,14 +106,22 @@ export default defineNuxtConfig({
       // API 基础路径。
       // 在组件里用 useRuntimeConfig().public.apiBase 读取。
       //
-      // 注意这里只写前缀 /api，不写完整域名。
-      // 完整路径在 useFetch 里拼接：
-      //   `${config.public.apiBase}/models/${id}`
-      //   = '/api/models/1'
+      // ⚠️ 这里刻意写的是「完整域名」，不是前缀 /api。
       //
-      // 这样写的好处：
-      //   - 开发环境：请求 localhost:3000/service/... → Nuxt 代理到 8000
-      //   - 生产环境：可以改成真实 API 域名，不用改业务代码
+      // 原因：SSR 阶段 useFetch 由 Node 直接发起请求，不经过 Vite，
+      // 也不经过下面的 nitro.devProxy。Node 环境里没有页面地址可以拼，
+      // 相对路径 '/api' 会直接 404 —— 这正是当初那个 404 问题的根因。
+      //
+      // 写成绝对地址后，服务端和浏览器端走同一条规则：
+      //   `${config.public.apiBase}/models/${id}`
+      //   = 'http://localhost:8000/api/models/1'
+      //
+      // 代价：浏览器端变成跨域请求，所以后端必须放行前端源
+      // （见 app/main.py 的 CORS_ORIGINS，默认 http://localhost:3000）。
+      //
+      // 附带说明：因为已经是绝对地址，上面 nitro.devProxy 的 '/api' 规则
+      // 实际不会再被命中，属于历史配置。生产环境只需改这一行（比如注入
+      // NUXT_PUBLIC_API_BASE=https://api.example.com/api），业务代码不用动。
       apiBase: 'http://localhost:8000/api',
     },
   },

@@ -13,10 +13,15 @@ defineProps<{
 </script>
 
 <template>
-  <div style="background: #f9f9f9; padding: 16px; border-radius: 8px;">
+  <div class="provider-card">
     <h2>供应商信息</h2>
     <p>
-      名称：{{ provider.provider_name }} ({{ provider.provider_code }})
+      名称：
+      <!-- 供应商名做成链接，可以回跳到该供应商的页面 -->
+      <NuxtLink :to="`/providers/${provider.id}`" class="provider-link">
+        {{ provider.provider_name }}
+      </NuxtLink>
+      <span class="provider-code">({{ provider.provider_code }})</span>
     </p>
     <p>
       官网：
@@ -24,11 +29,49 @@ defineProps<{
         v-if="provider.website_url"
         :href="provider.website_url"
         target="_blank"
-        style="color: blue;"
+        rel="noopener noreferrer"
+        class="site-link"
       >
         {{ provider.website_url }}
       </a>
-      <span v-else style="color: #999;">暂无官网</span>
+      <span v-else class="muted">暂无官网</span>
     </p>
   </div>
 </template>
+
+<style scoped>
+.provider-card {
+  padding: 16px;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.provider-card h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+.provider-card p {
+  margin: 6px 0;
+}
+
+.provider-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.provider-link:hover {
+  text-decoration: underline;
+}
+
+.provider-code {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.site-link {
+  color: #2563eb;
+  word-break: break-all;
+}
+</style>

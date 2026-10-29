@@ -5,21 +5,82 @@ import type { AiModelBase } from '#shared/types/display';
 defineProps<{
   model: AiModelBase;
 }>();
+
+// 说明文案：数据库里存的是枚举值，直接显示给用户会看不懂
+const thinkingText: Record<string, string> = {
+  none: '不支持',
+  non_thinking_only: '仅非思考模式',
+  thinking_only: '仅思考模式',
+  both: '两种模式都支持',
+  unknown: '未知',
+};
+
+const modeText: Record<string, string> = {
+  thinking: '思考模式',
+  non_thinking: '非思考模式',
+  unknown: '未知',
+};
+
+function orDash(value: string | number | null | undefined) {
+  return value === null || value === undefined || value === '' ? '—' : value;
+}
 </script>
 
 <template>
-  <section style="margin-top: 24px;">
+  <section class="model-section">
     <h2>模型信息</h2>
-    <ul style="list-style: none; padding: 0; line-height: 1.8;">
-      <li><strong>模型标识：</strong>{{ model.model_slug }}</li>
-      <li><strong>模型系列：</strong>{{ model.model_family || '—' }}</li>
-      <li><strong>上下文长度：</strong>{{ model.context_length_raw || '—' }}</li>
-      <li><strong>最大输出：</strong>{{ model.max_output_raw || '—' }}</li>
-      <li><strong>思考模式：</strong>{{ model.thinking_support }}</li>
-      <li><strong>默认思考模式：</strong>{{ model.default_thinking_mode || '—' }}</li>
-      <li><strong>思考模式说明：</strong>{{ model.thinking_note || '—' }}</li>
-      <li><strong>并发限制：</strong>{{ model.concurrency_limit ?? '—' }}</li>
-      <li><strong>描述：</strong>{{ model.description || '—' }}</li>
+    <ul class="model-list">
+      <li><span class="label">模型标识</span>{{ model.model_slug }}</li>
+      <li><span class="label">模型版本</span>{{ orDash(model.model_version) }}</li>
+      <li><span class="label">模型系列</span>{{ orDash(model.model_family) }}</li>
+      <li><span class="label">上下文长度</span>{{ orDash(model.context_length_raw) }}</li>
+      <li><span class="label">最大输出</span>{{ orDash(model.max_output_raw) }}</li>
+      <li>
+        <span class="label">思考模式</span>
+        {{ thinkingText[model.thinking_support] ?? model.thinking_support }}
+      </li>
+      <li>
+        <span class="label">默认模式</span>
+        {{ model.default_thinking_mode ? (modeText[model.default_thinking_mode] ?? model.default_thinking_mode) : '—' }}
+      </li>
+      <li><span class="label">模式说明</span>{{ orDash(model.thinking_note) }}</li>
+      <li><span class="label">并发限制</span>{{ orDash(model.concurrency_limit) }}</li>
+      <li><span class="label">描述</span>{{ orDash(model.description) }}</li>
     </ul>
   </section>
 </template>
+
+<style scoped>
+.model-section {
+  margin-top: 24px;
+}
+
+.model-section h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+.model-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.model-list li {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #f0f0f0;
+  font-size: 0.95rem;
+}
+
+.model-list li:last-child {
+  border-bottom: none;
+}
+
+/* 固定宽度的标签列，让值能整齐对齐 */
+.label {
+  flex: 0 0 90px;
+  color: #6b7280;
+}
+</style>
