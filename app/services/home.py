@@ -19,7 +19,7 @@ class HomeService:
     ):
         skip = (page - 1) * size
         query = await self.db.execute(
-            select(Provider.id, Provider.provider_name, Provider.ico)
+            select(Provider)
             .where(Provider.status == 1)
             .order_by(Provider.id)
             .offset(skip)

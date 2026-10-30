@@ -4,6 +4,7 @@ def to_index(
     return {
         "id":provider.id,
         "name":provider.provider_name,
+        "provider_code":provider.provider_code,
         "ico":provider.ico
     }
 
