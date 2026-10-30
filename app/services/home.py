@@ -26,7 +26,7 @@ class HomeService:
             .limit(size)
         )
 
-        result = query.all()
+        result = query.scalars().all()
         if not result:
             raise NotFound("展示列表为空")
 
