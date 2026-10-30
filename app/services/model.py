@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models import Ai_Model,Ai_Model_Cap,Ai_Model_Price,Provider
 from schemas import to_model,to_model_capabilites,to_model_prices,to_provider,to_detail
 from utils import info,NotFound
-from typing import Optional,TYPE_CHECKING
 
 
 class ModelService:
@@ -57,21 +56,26 @@ class ModelService:
         data = to_detail(model=model,proivder=provider,capabilities=capabilities,prices=prices)
         return info(data=data)
 
-    
+
+    # 供应商模型列表：只接受 provider_code 一个入口，provider_id 由这里统一解析
     async def get_model_list(
         self,
+        provider_code:str,
         page:int,
         size:int,
-        provider_code:str,
-        provider_id:Optional[int] = None,
     ):
-        from .home import HomeService
+        pid = (
+            await self.db.execute(
+                select(Provider.id).where(
+                    Provider.provider_code == provider_code,
+                    Provider.status == 1,
+                )
+            )
+        ).scalar_one_or_none()
 
-        pid = provider_id
-        if not pid:
-            pd = HomeService(db=self.db)
-            pid = (await pd.get_id(provider_code=provider_code)).get("id")
-            
+        if pid is None:
+            raise NotFound(f"供应商不存在或已停用: provider_code={provider_code}")
+
         skip = (page - 1)*size
         mquery = await self.db.execute(
             select(Ai_Model)

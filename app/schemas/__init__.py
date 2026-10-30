@@ -5,12 +5,10 @@ from .prices import(
     to_model_prices
 )
 from .provider import(
-    to_provider,
-    to_pdetail
+    to_provider
 )
 from .detail import(
-    to_detail,
-    to_index
+    to_detail
 )
 from .capabilites import(
     to_model_capabilites
