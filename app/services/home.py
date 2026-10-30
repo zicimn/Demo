@@ -48,7 +48,7 @@ class HomeService:
         if not result:
             raise NotFound("展示为空")
 
-        return to_pdetail(result)
+        return info(data=to_pdetail(result))
 
     
     #要将厂家+模型表同时起只显示最近5条
