@@ -22,3 +22,14 @@ async def index(
         return await service.index(page=page, size=size)
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.msg)
+
+
+@router.get("/models/{provider_code}")
+async def index(
+    provider_code:str,
+    service: HomeService = Depends(get_home_service)
+):
+    try:
+        return await service.details(provider_code=provider_code)
+    except AppError as e:
+        raise HTTPException(status_code=e.status_code,detail=e.msg)

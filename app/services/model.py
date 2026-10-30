@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models import Ai_Model,Ai_Model_Cap,Ai_Model_Price,Provider
 from schemas import to_model,to_model_capabilites,to_model_prices,to_provider,to_detail
 from utils import info,NotFound
+from typing import Optional,TYPE_CHECKING
+
 
 class ModelService:
 
@@ -54,4 +56,33 @@ class ModelService:
 
         data = to_detail(model=model,proivder=provider,capabilities=capabilities,prices=prices)
         return info(data=data)
-        
+
+    
+    async def get_model_list(
+        self,
+        page:int,
+        size:int,
+        provider_code:str,
+        provider_id:Optional[int] = None,
+    ):
+        from .home import HomeService
+
+        pid = provider_id
+        if not pid:
+            pd = HomeService(db=self.db)
+            pid = (await pd.get_id(provider_code=provider_code)).get("id")
+            
+        skip = (page - 1)*size
+        mquery = await self.db.execute(
+            select(Ai_Model)
+            .where(Ai_Model.status == "active")
+            .where(Ai_Model.provider_id == pid)
+            .order_by(Ai_Model.publish_at.desc())#因为表还没填
+            # .order_by(Ai_Model.created_at.desc())#暂时替代
+            .offset(skip)
+            .limit(size)
+        )
+        models = mquery.scalars().all()
+
+        data = {"models_data":[to_model(m) for m in models]}
+        return info(data=data)
