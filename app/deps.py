@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import get_db
-from services import HomeService, ModelService
+from services import ProviderService, ModelService
 
 
 async def get_model_service(
@@ -11,7 +11,7 @@ async def get_model_service(
     return ModelService(db)
 
 
-async def get_home_service(
+async def get_provider_service(
     db: AsyncSession = Depends(get_db)
-) -> HomeService:
-    return HomeService(db)
+) -> ProviderService:
+    return ProviderService(db)

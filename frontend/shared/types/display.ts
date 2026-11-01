@@ -1,30 +1,24 @@
 // ============================================================
-// shared/types/display.ts (基于后端最新重构更新)
+// shared/types/display.ts
 // ============================================================
 
-// 统一的 API 响应结构
 export interface ApiResponse<T> {
     msg: string;
     code: number;
     data: T;
 }
 
-// ---------------- 详情页相关类型 ----------------
-
-export interface Detail {
-    provider: AiProvider;
-    model: AiModelBase;
-    capabilities: AiModelCap[];
-    prices: AiModelPrice[];
-}
-
+// ---------------- 供应商类型 ----------------
 export interface AiProvider {
     id: number;
     provider_code: string;
     provider_name: string;
     website_url: string | null;
+    description: string | null;
+    ico: string | null;
 }
 
+// ---------------- 模型相关类型 ----------------
 export interface AiModelBase {
     id: number;
     model_slug: string;
@@ -57,10 +51,20 @@ export interface AiModelPrice {
     price: number;
 }
 
-// ---------------- 首页列表相关类型 ----------------
+export interface Detail {
+    provider: AiProvider;
+    model: AiModelBase;
+    capabilities: AiModelCap[];
+    prices: AiModelPrice[];
+}
 
-export interface ProviderItem {
-    id: number;
-    name: string;
-    ico: string | null;
+// ---------------- 列表与概览类型 ----------------
+
+// 首页列表返回的就是 AiProvider，不需要再单独定义 ProviderItem 了
+export type ProviderItem = AiProvider;
+
+// 供应商页概览的返回结构
+export interface ProviderOverviewData {
+    provider: AiProvider;
+    models_data: AiModelBase[];
 }

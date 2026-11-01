@@ -42,7 +42,7 @@ A FastAPI backend for managing AI model metadata — providers, model specificat
 packages inside it are `api`, `services`, `models`, `schema`, `config`, plus the modules
 `deps.py`, `err.py` and `main.py`.
 
-- Use **absolute imports rooted at `app/`**: `from services.home import HomeService`,
+- Use **absolute imports rooted at `app/`**: `from services.provider import ProviderService`,
   `from config.db import Base`, `from err import NotFound`.
 - **Never use parent-relative imports** (`from ..err import ...`). Because `app/` is the
   import root, `services` is already a top-level package, so `..` goes beyond the

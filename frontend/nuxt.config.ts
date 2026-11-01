@@ -2,6 +2,7 @@
 // nuxt.config.ts —— Nuxt 项目的全局配置文件
 // 该文件在项目根目录（和 package.json 同级）
 // ============================================================
+import process from 'node:process';
 
 export default defineNuxtConfig({
   // ------------------------------------------------------------
@@ -122,7 +123,7 @@ export default defineNuxtConfig({
       // 附带说明：因为已经是绝对地址，上面 nitro.devProxy 的 '/api' 规则
       // 实际不会再被命中，属于历史配置。生产环境只需改这一行（比如注入
       // NUXT_PUBLIC_API_BASE=https://api.example.com/api），业务代码不用动。
-      apiBase: 'http://localhost:8000/api',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
     },
   },
 });

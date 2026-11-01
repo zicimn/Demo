@@ -30,18 +30,17 @@ const iconSrc = computed(() => rawIcon.value);
 
 // 后端 ico 字段是可空的，名字也可能带空格，这里兜一层
 const initial = computed(() => {
-  const name = (props.provider.name || '').trim();
+  const name = (props.provider.provider_name || '').trim();
   return name ? name.charAt(0).toUpperCase() : '?';
 });
 </script>
 
 <template>
-  <NuxtLink :to="`/providers/${provider.id}`" class="provider-tile">
-    <!-- 有 ico 就显示图片；没配置或加载失败则退回首字母圆形头像 -->
+  <NuxtLink :to="`/providers/${provider.provider_code}`" class="provider-tile">
     <img
       v-if="showIcon"
       :src="iconSrc"
-      :alt="`${provider.name} 图标`"
+      :alt="`${provider.provider_name} 图标`"
       class="tile-icon"
       loading="lazy"
       decoding="async"
@@ -49,7 +48,8 @@ const initial = computed(() => {
     />
     <div v-else class="tile-avatar">{{ initial }}</div>
 
-    <h3 class="tile-name">{{ provider.name }}</h3>
+    <!-- name 变为 provider_name -->
+    <h3 class="tile-name">{{ provider.provider_name }}</h3>
     <p class="tile-action">查看模型 →</p>
   </NuxtLink>
 </template>
