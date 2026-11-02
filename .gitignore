@@ -1,16 +1,23 @@
+# ---------- 编辑器 / Python ----------
 .idea
-.venv
+.vscode
+.venv/
 __pycache__/
 *.pyc
+
+# ---------- 环境变量（严禁入库）----------
+.env
 app/.env
+frontend/.env
+frontend/.env.*
 
-run.bat
-.vscode
-
-# frontend/node_modules/
+# ---------- 前端 ----------
+frontend/node_modules/
 frontend/.nuxt/
 frontend/.output/
 frontend/dist/
-frontend/.env
 
-f/
+# ---------- 日志与本地脚本 ----------
+*.log
+logs/
+run.bat
