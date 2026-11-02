@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import type { AiModelCap } from '#shared/types/display';
 
-// 接收能力数组
+/** 模型能力标签列表；无数据时展示占位文案，不渲染空列表 */
 defineProps<{
   capabilities: AiModelCap[];
 }>();
 
-// 后端 support_status 的取值不止 supported/unsupported，
-// 还有 non_thinking_only / partial / beta，直接当文案显示会很难懂。
+/**
+ * 能力状态中文化。
+ * 后端 support_status 除 supported / unsupported 外，还可能出现
+ * non_thinking_only、partial、beta，直接展示英文会难以理解。
+ */
 const statusText: Record<string, string> = {
   supported: '支持',
   unsupported: '不支持',
@@ -16,6 +19,7 @@ const statusText: Record<string, string> = {
   non_thinking_only: '仅非思考模式',
 };
 
+/** 取值未收录时原样返回，保证后端新增枚举时不丢信息 */
 function label(status: string) {
   return statusText[status] ?? status;
 }
@@ -31,6 +35,7 @@ function label(status: string) {
       <li v-for="cap in capabilities" :key="cap.id" class="cap-item">
         <div class="cap-head">
           <strong>{{ cap.cap_name }}</strong>
+          <!-- is_beta 独立标记，避免与 support_status 的语义混淆 -->
           <span v-if="cap.is_beta" class="cap-beta">Beta</span>
         </div>
         <div class="cap-meta">
@@ -52,6 +57,7 @@ function label(status: string) {
   font-size: 1.15rem;
 }
 
+/* 标签流式排布，数量较多时自动换行 */
 .cap-list {
   display: flex;
   flex-wrap: wrap;

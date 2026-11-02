@@ -1,17 +1,21 @@
 /**
- * useApiError —— 把 useFetch 的 error 拆成「能给用户看的文案」。
+ * useApiError —— 将 useFetch 的 error 归一化为可直接用于渲染的状态。
  *
- * ⚠️ 这里踩过一个真坑，记录一下：
+ * 背景：
+ * 请求未到达服务器（TCP 连接失败）时，useFetch 同样会抛出 FetchError，
+ * 且 status 被包装为 500，与后端真实返回 500 的情况无法通过状态码区分。
+ * 若直接按状态码渲染，用户会看到「服务端错误（500）」，而后端可能从未启动。
  *
- * 直觉上「请求没到达服务器」应该表现为「没有 HTTP 状态码」。
- * 但 Nuxt 的 useFetch 会把「fetch failed」（TCP 连不上）统一包装成
- * status = 500 的 FetchError，于是状态码看起来和「后端真的返回了 500」
- * 一模一样 —— 用户会看到「服务端错误（500）」，明明后端根本没启动过。
+ * 解决方案：
+ * 状态码为 500 时，进一步遍历 error 的 cause 链，匹配网络层特有的错误特征：
+ *   Node（SSR） ：FetchError.cause → AggregateError { code: 'ECONNREFUSED' }
+ *   浏览器      ：TypeError: Failed to fetch / Load failed（Safari）
+ * 只有命中这些特征才判定为「网络不可达」。
  *
- * 所以真正的判据不是状态码，而是 error 的 cause 链路：
- *   Node(SSR)  : FetchError -> cause: AggregateError(code: ECONNREFUSED)
- *   浏览器      : TypeError: Failed to fetch / Load failed(Safari)
- * 把这些特征串起来匹配，才能区分「没连上」和「连上了但报错」。
+ * 返回值：
+ *   statusCode     HTTP 状态码，无状态码时为 null
+ *   isNetworkError 是否为网络层失败
+ *   message        面向用户的错误提示文案
  */
 
 /** error 及其 cause 链上可能出现的关键字段 */
@@ -25,7 +29,7 @@ interface ApiErrorLike {
   errors?: unknown[];
 }
 
-/** 出现这些字样，基本可以断定是网络层失败，而不是服务端业务错误 */
+/** 出现这些字样时，可判定为网络层失败而非服务端业务错误 */
 const NETWORK_SIGNS = [
   'fetch failed',
   'failed to fetch',
@@ -42,8 +46,8 @@ const NETWORK_SIGNS = [
 ];
 
 /**
- * 深度遍历 cause / AggregateError.errors，把 message 和 code 收集成字符串数组。
- * 限制 depth 是为了防止异常对象里出现循环引用。
+ * 深度遍历 cause 与 AggregateError.errors，收集其中的 message 与 code。
+ * depth 上限用于防止异常对象存在循环引用时无限递归。
  */
 function collectSignals(err: unknown, depth = 0): string[] {
   if (!err || depth > 4) {
@@ -69,6 +73,7 @@ function collectSignals(err: unknown, depth = 0): string[] {
   return signals;
 }
 
+/** 判断 cause 链中是否出现网络层错误特征（不区分大小写） */
 function looksLikeNetworkFailure(err: unknown): boolean {
   return collectSignals(err).some((signal) => {
     const text = signal.toLowerCase();
@@ -81,13 +86,16 @@ export function useApiError(error: Ref<unknown>) {
 
   const raw = computed(() => error.value as ApiErrorLike | null | undefined);
 
-  // 新版本 Nuxt 用 status，老版本用 statusCode，两个都兜一下
+  /** 兼容不同 Nuxt 版本：新版本为 status，旧版本为 statusCode */
   const statusCode = computed(
     () => raw.value?.status ?? raw.value?.statusCode ?? null,
   );
 
-  // 有 error 且没状态码 → 网络层失败（部分版本会这样表现）
-  // 有 error 且是 500 → 还要再看 cause，才能区分「没连上」和「后端真报错」
+  /**
+   * 网络失败判定分两步：
+   *   1. 无状态码 → 直接判定为网络层失败（部分版本的表现）
+   *   2. 状态码为 500 → 再检查 cause 链，才能区分「未连上」与「后端确实报错」
+   */
   const isNetworkError = computed(() => {
     if (!raw.value) {
       return false;

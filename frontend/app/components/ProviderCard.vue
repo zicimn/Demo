@@ -1,12 +1,7 @@
 <script setup lang="ts">
-// 引入我们写好的 AiProvider 类型
 import type { AiProvider } from '#shared/types/display';
 
-// ============================================================
-// defineProps 是 Vue 3 的语法，用于定义「父组件传给子组件」的数据。
-// 语法：defineProps<{ 属性名: 类型 }>()
-// 这样写之后，父组件必须传一个 provider 对象给这个组件。
-// ============================================================
+/** 模型详情页顶部的供应商概要卡片 */
 defineProps<{
   provider: AiProvider;
 }>();
@@ -17,8 +12,8 @@ defineProps<{
     <h2>供应商信息</h2>
     <p>
       名称：
-      <!-- 供应商名做成链接，可以回跳到该供应商的页面 -->
-      <NuxtLink :to="`/providers/${provider.id}`" class="provider-link">
+      <!-- 名称作为入口，可返回该供应商详情页 -->
+      <NuxtLink :to="`/providers/${provider.provider_code}`" class="provider-link">
         {{ provider.provider_name }}
       </NuxtLink>
       <span class="provider-code">({{ provider.provider_code }})</span>
@@ -70,6 +65,7 @@ defineProps<{
   font-size: 0.9rem;
 }
 
+/* 官网地址长度不可控，允许在任意位置换行，避免撑破容器 */
 .site-link {
   color: #2563eb;
   word-break: break-all;

@@ -1,25 +1,29 @@
 <script setup lang="ts">
 import type { AiModelPrice } from '#shared/types/display';
 
-// 接收价格数组
+/** 模型定价表；无数据时展示占位文案，不渲染空表格 */
 defineProps<{
   prices: AiModelPrice[];
 }>();
 
-// 后端 time_period 实际出现三种值：peak / off_peak / standard，
-// 原来只判断「是不是 peak」，导致 standard 一律被染成绿色，
-// 看起来像「便宜时段」，语义是错的。这里按三种值分别处理。
+/**
+ * 价格时段中文化 + 配色。
+ * 后端 time_period 实际存在三种取值：peak / off_peak / standard。
+ * 不能仅按「是否 peak」二分，否则 standard 会被误标为低谷色，
+ * 让用户误判为价格更便宜的时段。
+ */
 const periodStyle: Record<string, { text: string; color: string }> = {
   peak: { text: '高峰', color: '#dc2626' },
   off_peak: { text: '低谷', color: '#059669' },
   standard: { text: '标准', color: '#6b7280' },
 };
 
+/** 取值未收录时按中性色兜底，保证表格可正常渲染 */
 function period(timePeriod: string) {
   return periodStyle[timePeriod] ?? { text: timePeriod, color: '#6b7280' };
 }
 
-// price_type 同理：input_cache_hit / input_cache_miss / output 直接显示太生硬
+/** 价格类型中文化：input_cache_hit / input_cache_miss / output 等 */
 const priceTypeText: Record<string, string> = {
   input_cache_hit: '输入（缓存命中）',
   input_cache_miss: '输入（缓存未命中）',
@@ -90,10 +94,12 @@ function priceType(type: string) {
   font-size: 0.95rem;
 }
 
+/* 数值列右对齐，位数不同时便于纵向比较 */
 .price-table .num {
   text-align: right;
 }
 
+/* 价格不换行，避免「¥」与数字被拆到两行 */
 .price-value {
   font-weight: 600;
   white-space: nowrap;

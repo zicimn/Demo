@@ -3,29 +3,35 @@ import type { ApiResponse, ProviderItem } from '#shared/types/display';
 
 const config = useRuntimeConfig();
 
-// 后端 /api/home/ 支持 page / size，但上限是 le=100，且响应里没有 total，
-// 前端无法做真正的分页。这里直接要 100 条，避免默认 size=20 时
-// 供应商超过 20 个被静默截断（等后端补 total 后再换成分页器）。
+/**
+ * 供应商列表数据源。
+ *
+ * 该接口只返回 data 数组、不返回 total，前端无法实现真正的分页，
+ * 因此一次性请求上限条数（size 上限为 100），避免默认 20 条时
+ * 供应商数量超出后被静默截断。后端补充 total 后可替换为分页器。
+ */
 const { data: res, pending, error, refresh } = await useFetch<
   ApiResponse<ProviderItem[]>
 >(`${config.public.apiBase}/providers`, {
   query: { page: 1, size: 100 },
 });
 
-// 统一从这里取列表：res / data 都可能是 null，集中兜一次，模板里就不用到处写 ?
+/** 原始列表。res 与 data 均可能为 null，在此统一兜底，模板中无需重复判空。 */
 const providers = computed(() => res.value?.data ?? []);
 
-// 搜索关键词。空串表示不筛选。ref 是 Vue 的“响应式盒子”，
-// 值一变，所有读它的 computed / 模板都会自动更新。
+/** 搜索关键词，空串表示不筛选。 */
 const keyword = ref('');
 
-// 过滤后的列表。
-// 为什么用 computed 而不是 watch + 手动赋值？
-//   computed 是惰性 + 缓存 + 依赖追踪：keyword 或 providers 一变自动重算，
-//   不需要额外维护一份状态，也不会出现“refresh 后忘了重算”的 bug。
-// 为什么只按 name 匹配？
-//   首页 DTO 只有 {id, name, ico}：ico 全为 null，id 对用户不可见，
-//   provider_code 列表接口没返回。name 是唯一有意义的搜索字段。
+/**
+ * 按关键词过滤后的列表。
+ *
+ * 使用 computed 而非 watch + 手动赋值：computed 具备惰性求值、结果缓存
+ * 与依赖追踪，keyword 或 providers 变化时自动重算，无需维护第二份状态，
+ * 也不会出现「refresh 后忘记重算」的问题。
+ *
+ * 目前仅匹配 provider_name：列表接口返回 id / provider_code / provider_name / ico，
+ * 其中 provider_code 不在界面展示，用户实际可见且可检索的只有名称。
+ */
 const filteredProviders = computed(() => {
   const q = keyword.value.trim().toLowerCase();
   if (!q) {
@@ -36,11 +42,10 @@ const filteredProviders = computed(() => {
   );
 });
 
-// 是否有关键词（用于控制“清除”按钮显隐）。
-// 用 trim 后的长度判断，避免用户只输入空格时按钮也冒出来。
+/** 是否有关键词，用于控制清除按钮显隐。按 trim 后长度判断，纯空格不视为有效输入。 */
 const hasKeyword = computed(() => keyword.value.trim().length > 0);
 
-// 把 error 拆成 statusCode / isNetworkError / 人话文案
+/** 统一解构错误：statusCode 用于分支判断，isNetworkError 与 message 用于提示文案。 */
 const { statusCode, isNetworkError, message: errorMessage } = useApiError(error);
 
 useSeoMeta({
@@ -56,8 +61,8 @@ useSeoMeta({
     <div v-if="pending" class="status-box">正在加载供应商列表…</div>
 
     <!--
-      列表接口在「查不到任何启用中的供应商」时会返回 404（后端 raise NotFound）。
-      对前端来说这等价于「没有数据」，不该显示成加载失败，所以单独拦一层。
+      列表接口在「查无启用中的供应商」时返回 404（后端主动 raise NotFound）。
+      该状态对前端而言等价于「无数据」，单独拦截，避免被误报为加载失败。
     -->
     <div v-else-if="error && statusCode === 404" class="status-box">
       暂无供应商数据
@@ -75,18 +80,18 @@ useSeoMeta({
     </div>
 
     <!--
-      空数组也走这里。
-      注意：这里必须用 providers（原始数据）判断，不能用 filteredProviders。
-      否则后端真没数据时，会被误报成「搜索无结果」。
+      接口成功但返回空数组时进入此分支。
+      注意必须基于 providers（原始数据）判断，不能使用 filteredProviders，
+      否则后端确实没有数据时会被误判为「搜索无结果」。
     -->
     <div v-else-if="providers.length === 0" class="status-box">
       暂无供应商数据
     </div>
 
     <!--
-      走到这里说明「后端确实有数据」。
-      工具栏只在有数据时显示；搜索无结果的分支也必须放在这里，
-      因为用户需要能改关键词、清空关键词。
+      进入此分支表示后端确认存在数据。
+      工具栏仅在有数据时渲染；搜索无结果的状态同样放在分支内部，
+      以保证用户仍可修改或清空关键词。
     -->
     <template v-else>
       <div class="toolbar">
@@ -124,7 +129,7 @@ useSeoMeta({
 </template>
 
 <style scoped>
-/* 工具栏：输入框 + 清除按钮 */
+/* 搜索栏：输入框与清除按钮共用同一相对定位容器 */
 .toolbar {
   position: relative;
   margin-bottom: 20px;
@@ -132,7 +137,8 @@ useSeoMeta({
 
 .search-input {
   width: 100%;
-  padding: 10px 40px 10px 12px; /* 右侧留 40px 给清除按钮 */
+  /* 右侧预留 40px，为清除按钮留出位置，避免文字被按钮遮挡 */
+  padding: 10px 40px 10px 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: #fff;
@@ -148,7 +154,7 @@ useSeoMeta({
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-/* 清除按钮：绝对定位到输入框右侧内部 */
+/* 清除按钮：绝对定位到输入框右侧内部，垂直居中 */
 .clear-btn {
   position: absolute;
   top: 50%;
@@ -172,7 +178,7 @@ useSeoMeta({
   color: #111;
 }
 
-/* 网格布局；单张卡片的样式在 ProviderTile.vue 里 */
+/* 自适应网格：按容器宽度自动决定列数；单张卡片的样式见 ProviderTile.vue */
 .provider-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

@@ -2,20 +2,29 @@
 import type { ApiResponse, Detail } from '#shared/types/display';
 
 const route = useRoute();
+/** 路由参数为模型主键 id，与后端 /api/models/{id} 对应 */
 const modelId = route.params.id;
 const config = useRuntimeConfig();
 
+/**
+ * 模型详情数据源。
+ * 后端在「模型不存在」或「所属供应商已停用」时返回 404，
+ * 因此 404 需单独映射为「不存在」文案，不能笼统归为加载失败。
+ */
 const { data: res, pending, error, refresh } = await useFetch<
   ApiResponse<Detail>
 >(`${config.public.apiBase}/models/${modelId}`);
 
+/** 详情数据；请求失败或响应为空时为 null */
 const detail = computed(() => res.value?.data ?? null);
 
-// statusCode / isNetworkError / 人话文案，与首页共用同一套判断逻辑
+/** 与首页共用同一套错误归一化逻辑（见 composables/useApiError） */
 const { statusCode, isNetworkError, message: errorMessage } = useApiError(error);
 
-// 标题用函数（getter）而不是写死的值：数据是异步来的，
-// 直接传字符串会在数据到达前就把标题定成默认值。
+/**
+ * SEO 元信息使用 getter 而非固定值：
+ * 数据在 SSR 阶段异步获取，固定值会在数据到达前就写入默认标题。
+ */
 useSeoMeta({
   title: () =>
     detail.value
@@ -30,6 +39,7 @@ useSeoMeta({
   <div class="page-container">
     <div v-if="pending" class="status-box">正在加载模型信息…</div>
 
+    <!-- 404 单独文案，其余错误使用统一归一化后的提示 -->
     <div v-else-if="error" class="status-box">
       <p class="error-text">
         {{ statusCode === 404 ? '模型不存在，或所属供应商已停用' : errorMessage }}
@@ -44,6 +54,7 @@ useSeoMeta({
       </div>
     </div>
 
+    <!-- 请求成功但响应体无 data -->
     <div v-else-if="!detail" class="status-box">没有找到该模型的数据</div>
 
     <template v-else>
@@ -68,6 +79,7 @@ useSeoMeta({
   color: #111;
 }
 
+/* 操作区左对齐，与上方内容块保持同一左边距 */
 .page-actions {
   margin-top: 32px;
   justify-content: flex-start;

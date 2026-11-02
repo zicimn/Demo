@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { AiModelBase } from '#shared/types/display';
 
-// 接收父组件传过来的 model 数据
+/** 模型基础信息列表；空值统一以「—」占位，保持行结构完整 */
 defineProps<{
   model: AiModelBase;
 }>();
 
-// 说明文案：数据库里存的是枚举值，直接显示给用户会看不懂
+/** 思考模式中文化：数据库存储英文枚举，直接展示对用户不可读 */
 const thinkingText: Record<string, string> = {
   none: '不支持',
   non_thinking_only: '仅非思考模式',
@@ -15,12 +15,14 @@ const thinkingText: Record<string, string> = {
   unknown: '未知',
 };
 
+/** 默认思考模式中文化 */
 const modeText: Record<string, string> = {
   thinking: '思考模式',
   non_thinking: '非思考模式',
   unknown: '未知',
 };
 
+/** 空值占位：null / undefined / 空串统一显示为「—」，避免出现空白行 */
 function orDash(value: string | number | null | undefined) {
   return value === null || value === undefined || value === '' ? '—' : value;
 }
@@ -37,11 +39,16 @@ function orDash(value: string | number | null | undefined) {
       <li><span class="label">最大输出</span>{{ orDash(model.max_output_raw) }}</li>
       <li>
         <span class="label">思考模式</span>
+        <!-- 枚举值兜底：出现未收录的取值时原样展示，避免信息丢失 -->
         {{ thinkingText[model.thinking_support] ?? model.thinking_support }}
       </li>
       <li>
         <span class="label">默认模式</span>
-        {{ model.default_thinking_mode ? (modeText[model.default_thinking_mode] ?? model.default_thinking_mode) : '—' }}
+        {{
+          model.default_thinking_mode
+            ? (modeText[model.default_thinking_mode] ?? model.default_thinking_mode)
+            : '—'
+        }}
       </li>
       <li><span class="label">模式说明</span>{{ orDash(model.thinking_note) }}</li>
       <li><span class="label">并发限制</span>{{ orDash(model.concurrency_limit) }}</li>
@@ -66,6 +73,7 @@ function orDash(value: string | number | null | undefined) {
   list-style: none;
 }
 
+/* 每项一行，末项去掉分隔线避免与下方区块叠线 */
 .model-list li {
   display: flex;
   gap: 12px;
@@ -78,7 +86,7 @@ function orDash(value: string | number | null | undefined) {
   border-bottom: none;
 }
 
-/* 固定宽度的标签列，让值能整齐对齐 */
+/* 固定宽度的标签列，使右侧各行的值起始位置对齐 */
 .label {
   flex: 0 0 90px;
   color: #6b7280;

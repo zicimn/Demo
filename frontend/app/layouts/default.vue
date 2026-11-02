@@ -1,22 +1,26 @@
+<!--
+  全局布局：吸顶导航栏 + 内容区 + 页脚。
+
+  说明：该文件由根组件 app/app.vue 中的 <NuxtLayout> 触发渲染，
+  若根组件缺少 <NuxtLayout>，本布局不会生效。
+-->
 <template>
   <div class="app-wrapper">
-    <!-- 全局顶部导航栏 -->
     <header class="global-header">
       <div class="header-content">
         <NuxtLink to="/" class="logo">AIWiki</NuxtLink>
         <nav class="nav-links">
           <NuxtLink to="/">首页</NuxtLink>
-          <!-- 以后可以在这里加更多导航 -->
+          <!-- 后续导航项在此扩展 -->
         </nav>
       </div>
     </header>
 
-    <!-- 页面主体内容出口：<slot /> 会被替换成 index.vue / [id].vue 的内容 -->
+    <!-- 内容出口：渲染当前路由匹配到的页面组件 -->
     <main class="main-content">
       <slot />
     </main>
 
-    <!-- 全局底部 -->
     <footer class="global-footer">
       © 2026 AIWiki - 前端学习实战项目
     </footer>
@@ -24,6 +28,7 @@
 </template>
 
 <style scoped>
+/* 纵向弹性布局：配合 .main-content 的 flex: 1，使页脚始终贴底 */
 .app-wrapper {
   display: flex;
   flex-direction: column;
@@ -32,6 +37,7 @@
     Arial, sans-serif;
 }
 
+/* sticky 定位实现滚动时吸顶；z-index 保证盖住页面内容 */
 .global-header {
   position: sticky;
   top: 0;
@@ -42,6 +48,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* 内容宽度与 .page-container 对齐，保证导航与页面主体左右边界一致 */
 .header-content {
   display: flex;
   align-items: center;
@@ -77,17 +84,17 @@
   color: #fff;
 }
 
-/* Nuxt 会为「当前路由」对应的 NuxtLink 自动加上 router-link-active 类，
-   用它做高亮，比在 JS 里比对 pathname 简单得多。
-   注意：首页的 "/" 默认是所有路由的前缀，所以还需要 exact-active 才算精确命中。
-   单层路由场景下 active 就够了。 */
+/* 当前路由高亮：NuxtLink 会自动附加 router-link-active 类，
+   无需在脚本中比对 pathname。默认保留 2px 透明下边框，防止
+   高亮时因边框出现导致高度跳动。 */
 .nav-links a.router-link-active {
   border-bottom-color: #3b82f6;
   color: #fff;
 }
 
+/* 撑满剩余高度，将页脚推至视口底部（内容不足一屏时同样贴底） */
 .main-content {
-  flex: 1; /* 撑满剩余高度，把页脚顶到最底部 */
+  flex: 1;
   padding: 24px;
 }
 
