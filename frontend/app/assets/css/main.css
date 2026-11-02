@@ -1,0 +1,161 @@
+/* ============================================================
+   app/assets/css/main.css —— 全局样式入口
+
+   由 nuxt.config.ts 的 css 字段引入，对所有页面生效，承载
+   跨页面复用的基础样式与通用类：
+
+     1. 基础重置      消除浏览器默认 margin 与 content-box 盒模型差异
+     2. 布局与容器    .page-container / .section-title
+     3. 状态展示      .status-box / .muted / .hint
+     4. 交互元素      .btn / .btn--ghost / .btn-row
+     5. 路由过渡      .page-*（与 nuxt.config.ts 的 app.pageTransition 对应）
+
+   编写约定：仅在此处放「跨页面复用」的样式。组件专属样式写在
+   对应 SFC 的 <style scoped> 中——scoped 会给选择器附加 [data-v-xxx]，
+   只能命中本组件，无法跨组件共享，因此通用类必须放全局。
+   ============================================================ */
+
+/* ---------- 1. 基础重置 ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #f9fafb;
+  color: #111827;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 图片默认按块级渲染，避免行内元素基线留白；同时限制不超出容器宽度 */
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ---------- 2. 布局与容器 ---------- */
+/* 三个页面统一套用，保证白底、圆角、阴影与最大宽度完全一致 */
+.page-container {
+  max-width: 960px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 窄屏下去掉圆角并收窄内边距，避免卡片边缘与视口产生视觉错位 */
+@media (max-width: 640px) {
+  .page-container {
+    padding: 20px 16px;
+    border-radius: 0;
+  }
+}
+
+.section-title {
+  margin: 0 0 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #eee;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111;
+}
+
+/* ---------- 3. 状态展示 ---------- */
+/* 加载中 / 无数据 / 空搜索结果共用的居中容器 */
+.status-box {
+  padding: 48px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* 使用子选择器限定层级，避免影响 .status-box 内其他红色文本 */
+.status-box > .error-text {
+  margin: 0 0 16px;
+  color: #ef4444;
+}
+
+/* 弱化说明文字，用于「暂无数据」等占位提示 */
+.muted {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* 错误状态下的操作指引，例如「请先启动后端」 */
+.hint {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* 行内命令样式，长路径允许换行以免撑破容器 */
+.hint code {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #374151;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-all;
+}
+
+/* ---------- 4. 交互元素 ---------- */
+/* 主按钮：同时适配 <button> 与 <a>，故显式声明字体族与文本装饰 */
+.btn {
+  display: inline-block;
+  padding: 8px 20px;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.btn:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+/* 次级按钮：线框样式，用于「返回首页」等非主操作 */
+.btn--ghost {
+  background: transparent;
+  color: #2563eb;
+}
+
+.btn--ghost:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+/* 按钮组：允许换行，窄屏下不会横向溢出 */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ---------- 5. 路由过渡 ---------- */
+/* 类名需与 nuxt.config.ts 中 app.pageTransition.name = 'page' 保持一致。
+   配合 mode: 'out-in'，实现「旧页面先淡出、新页面再淡入」，避免切换时高度跳动。 */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}

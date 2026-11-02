@@ -1,0 +1,14 @@
+# 默认让 Git 自动处理文本文件的换行符
+* text=auto eol=lf
+
+# Windows 脚本必须保留 CRLF，否则 cmd 解析会崩溃
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 明确指定二进制文件，防止 Git 试图转换它们
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

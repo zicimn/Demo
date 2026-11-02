@@ -1,86 +1,94 @@
-// ============================================================
-// nuxt.config.ts —— Nuxt 项目的全局配置文件
-// 该文件在项目根目录（和 package.json 同级）
-// ============================================================
+/**
+ * Nuxt 应用全局配置。
+ *
+ * 集中管理：全局样式、路由过渡、SEO 默认值、接口地址。
+ * 修改本文件需重启 dev server 才会生效。
+ */
+import process from 'node:process';
 
 export default defineNuxtConfig({
-  // ------------------------------------------------------------
-  // compatibilityDate
-  // Nuxt 用它来判断使用哪些兼容性特性。
-  // 一般填项目启动日期即可，不影响功能。
-  // ------------------------------------------------------------
+  /** 用于判定采用哪些 Nuxt 兼容性特性，填项目初始化日期即可 */
   compatibilityDate: '2026-10-10',
 
-  // ------------------------------------------------------------
-  // devtools
-  // 是否启用 Nuxt DevTools（开发时的可视化调试面板）。
-  // 浏览器打开页面时，底部会出现一个浮标，点击可查看组件树、路由、状态等。
-  // 开发环境建议开启。
-  // ------------------------------------------------------------
+  /** Nuxt DevTools 调试面板，仅开发环境使用 */
   devtools: { enabled: true },
 
-  // ------------------------------------------------------------
-  // typescript
-  // typeCheck: false 表示 dev 和 build 时不做全项目类型检查。
-  // 为什么关掉？
-  //   Nuxt 有几百个自动生成的文件，全量类型检查非常慢，
-  //   会拖慢热更新。
-  // 需要检查时手动执行 npm run typecheck。
-  // ------------------------------------------------------------
+  /**
+   * 全局样式入口。
+   * 此处引入的样式对所有页面生效（不受 scoped 限制），用于承载
+   * CSS 重置、跨页面复用的容器类与路由过渡动画的类名。
+   * 路径中的 `~` 指向 srcDir，Nuxt 4 默认为 app/，
+   * 因此实际解析到 app/assets/css/main.css。
+   */
+  css: ['~/assets/css/main.css'],
+
+  app: {
+    /**
+     * 全站默认 head 内容。
+     * 单页可通过 useSeoMeta() 覆盖 title 与 description。
+     */
+    head: {
+      htmlAttrs: { lang: 'zh-CN' },
+      title: 'AIWiki - AI 模型能力与定价速查',
+      meta: [
+        {
+          name: 'description',
+          content: 'AIWiki：按供应商浏览 AI 模型的能力、上下文长度与定价。',
+        },
+      ],
+    },
+    /**
+     * 路由切换过渡。
+     * mode: 'out-in' 使旧页面先淡出、新页面再淡入，避免两者同时存在于 DOM
+     * 导致页面高度剧烈跳动；name: 'page' 对应 main.css 中的 .page-* 类名。
+     */
+    pageTransition: { name: 'page', mode: 'out-in' },
+  },
+
+  /**
+   * 关闭构建期全量类型检查。
+   * 原因：Nuxt 会生成大量类型文件，全量检查显著拖慢热更新。
+   * 需要检查时单独执行 npm run typecheck。
+   */
   typescript: {
     typeCheck: false,
   },
 
-  // ------------------------------------------------------------
-  // nitro
-  // Nitro 是 Nuxt 的服务端引擎（基于 h3）。
-  // devProxy 用于开发环境配置代理。
-  //
-  // ⚠️ 为什么用 nitro.devProxy 而不是 vite.server.proxy？
-  //   Nuxt 4 页面默认在服务端渲染（SSR），SSR 阶段发起的请求
-  //   由 Nitro 处理，不经过 Vite。
-  //   如果只配 vite.server.proxy，SSR 请求会绕过代理，直接
-  //   请求 localhost:3000/service/... 然后 404。
-  //   所以必须配 nitro.devProxy，才能覆盖 SSR 和浏览器两条路径。
-  // ------------------------------------------------------------
+  /**
+   * 开发环境反向代理。
+   *
+   * 说明：当前 runtimeConfig.public.apiBase 使用绝对地址，请求不会经过此处，
+   * 因此以下规则实际不会被命中。保留该配置是为了将来若改回相对路径
+   * 仍能覆盖 SSR 与服务端两条链路——SSR 阶段请求由 Node 发起、不经过 Vite，
+   * 仅在 vite.server.proxy 中配置会漏掉 SSR 链路。
+   */
   nitro: {
     devProxy: {
-      // 匹配所有以 /api 开头的请求
       '/api': {
-        // 转发目标：本地后端 FastAPI 服务
-        // 后端跑在 8000 端口
         target: 'http://localhost:8000/api',
-        // changeOrigin: true 表示把请求头里的 Host 改成目标的 Host。
-        // 有些后端会校验 Host，不设置可能被拒绝。
+        /** 将请求头 Host 改写为目标地址，部分后端会校验 Host */
         changeOrigin: true,
       },
     },
   },
 
-  // ------------------------------------------------------------
-  // runtimeConfig
-  // 运行时配置：在应用运行期间可读取的配置。
-  // public 下的字段会同时暴露给服务端和客户端。
-  //
-  // 为什么用 runtimeConfig 而不是直接硬编码 URL？
-  //   1. 环境隔离：开发、测试、生产可以用不同值
-  //   2. 可以通过环境变量覆盖：NUXT_PUBLIC_API_BASE=xxx npm run dev
-  //   3. 类型安全：useRuntimeConfig() 返回的对象有类型提示
-  // ------------------------------------------------------------
   runtimeConfig: {
     public: {
-      // API 基础路径。
-      // 在组件里用 useRuntimeConfig().public.apiBase 读取。
-      //
-      // 注意这里只写前缀 /api，不写完整域名。
-      // 完整路径在 useFetch 里拼接：
-      //   `${config.public.apiBase}/models/${id}`
-      //   = '/api/models/1'
-      //
-      // 这样写的好处：
-      //   - 开发环境：请求 localhost:3000/service/... → Nuxt 代理到 8000
-      //   - 生产环境：可以改成真实 API 域名，不用改业务代码
-      apiBase: 'http://localhost:8000/api',
+      /**
+       * 接口基础地址。组件中通过 useRuntimeConfig().public.apiBase 读取。
+       *
+       * 此处刻意使用「绝对地址」而非 `/api` 前缀：
+       * SSR 阶段 useFetch 由 Node 直接发起请求，环境中不存在页面 URL 可供拼接，
+       * 相对路径会直接 404。使用绝对地址后，服务端与浏览器端遵循同一规则：
+       *   `${apiBase}/models/1` → `http://localhost:8000/api/models/1`
+       *
+       * 代价：浏览器端变为跨域请求，需后端放行前端源
+       * （见 app/main.py 的 CORS_ORIGINS，默认 http://localhost:3000）。
+       *
+       * 部署到其他环境时，通过环境变量覆盖即可，无需改动业务代码：
+       *   NUXT_PUBLIC_API_BASE=https://api.example.com/api
+       */
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
     },
   },
 });
