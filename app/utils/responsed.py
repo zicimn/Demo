@@ -51,7 +51,7 @@ _ERROR_MSG_BY_STATUS: dict[int, str] = {
 }
 
 
-def error_response(e: AppError) -> JSONResponse:
+def fail(e: AppError) -> JSONResponse:
     return JSONResponse(
         status_code=e.status_code,
         content=info(

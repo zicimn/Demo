@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, Query
 
 from deps import get_model_service, get_provider_service
-from utils.responsed import AppError, error_response
+from utils.responsed import AppError, fail
 from services.model import ModelService
 from services.provider import ProviderService
 
@@ -25,7 +25,7 @@ async def list_providers(
     try:
         return await service.list_providers(keyword=keyword,page=page, size=size)
     except AppError as e:
-        return error_response(e)
+        return fail(e)
 
 
 # 供应商详情
@@ -37,7 +37,7 @@ async def get_provider(
     try:
         return await service.get_provider_detail(provider_code=provider_code)
     except AppError as e:
-        return error_response(e)
+        return fail(e)
 
 
 # 该供应商的模型分页列表
@@ -55,7 +55,7 @@ async def get_provider_models(
             size=size,
         )
     except AppError as e:
-        return error_response(e)
+        return fail(e)
 
 
 # 首页用：供应商详情 + 最近 5 条模型
@@ -67,4 +67,4 @@ async def get_provider_overview(
     try:
         return await service.get_overview(provider_code=provider_code)
     except AppError as e:
-        return error_response(e)
+        return fail(e)

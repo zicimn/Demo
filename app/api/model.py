@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends
 
 from deps import get_model_service
-from utils.responsed import AppError, error_response
+from utils.responsed import AppError, fail
 from services.model import ModelService
 
 logger = logging.getLogger(__name__)
@@ -20,4 +20,4 @@ async def get_model_detail(
     try:
         return await service.get_model_detail(model_id)
     except AppError as e:
-        return error_response(e)
+        return fail(e)
