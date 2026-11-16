@@ -28,8 +28,15 @@ logging.basicConfig(
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     logger.info("服务启动完成 | CORS=%s", ", ".join(cors_origins) or "(none)")
-    for path in sorted({route.path for route in app.routes}):
+
+    paths = sorted({
+        getattr(route, "path", None)
+        for route in app.routes
+        if getattr(route, "path", None)
+    })
+    for path in paths:
         logger.info("已注册路由: %s", path)
+
     yield
 
 
@@ -55,12 +62,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(service_router)
-
+# app.frontend("/", directory="frontend/.output/public", fallback="index.html") 由于前端均为绝对路径导致没法渲染
 
 if __name__ == "__main__":
     uvicorn.run(
         "main:app", 
-        reload=True, 
+        reload=True,
         log_level="debug",      # uvicorn 自己产生的日志也打到 DEBUG
         log_config=None,        # 关键：不用 uvicorn 自带的 logging 配置
         reload_excludes=["*.log", "__pycache__/*"]

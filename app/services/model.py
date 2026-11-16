@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select,func
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import Ai_Model,Ai_Model_Cap,Ai_Model_Price,Provider
 from schemas import to_model,to_model_capabilites,to_model_prices,to_provider,to_detail
@@ -88,5 +88,12 @@ class ModelService:
         )
         models = mquery.scalars().all()
 
+        total = (await self.db.execute(
+            select(func.count())
+            .select_from(Ai_Model)
+            .where(Ai_Model.status == "active")
+            .where(Ai_Model.provider_id == pid)
+        )).scalar_one()
+
         data = {"models_data":[to_model(m) for m in models]}
-        return info(data=data)
+        return info(data=data,total=total)

@@ -1,11 +1,13 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 
 from deps import get_model_service, get_provider_service
-from utils.responsed import AppError
+from utils.responsed import AppError, error_response
 from services.model import ModelService
 from services.provider import ProviderService
+
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +17,15 @@ router = APIRouter(prefix="/api/providers", tags=["Providers"])
 # 供应商列表
 @router.get("")
 async def list_providers(
+    keyword:Optional[str] = None,
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     service: ProviderService = Depends(get_provider_service)
 ):
     try:
-        return await service.list_providers(page=page, size=size)
+        return await service.list_providers(keyword=keyword,page=page, size=size)
     except AppError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.msg)
+        return error_response(e)
 
 
 # 供应商详情
@@ -34,7 +37,7 @@ async def get_provider(
     try:
         return await service.get_provider_detail(provider_code=provider_code)
     except AppError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.msg)
+        return error_response(e)
 
 
 # 该供应商的模型分页列表
@@ -52,7 +55,7 @@ async def get_provider_models(
             size=size,
         )
     except AppError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.msg)
+        return error_response(e)
 
 
 # 首页用：供应商详情 + 最近 5 条模型
@@ -64,4 +67,4 @@ async def get_provider_overview(
     try:
         return await service.get_overview(provider_code=provider_code)
     except AppError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.msg)
+        return error_response(e)

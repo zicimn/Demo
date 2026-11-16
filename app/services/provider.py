@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select,func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from utils import NotFound, info
@@ -13,13 +13,19 @@ class ProviderService:
 
     async def list_providers(
         self,
+        keyword:str,
         page: int,
         size: int,
     ):
+        
+        filters = [Provider.status == 1]
+        if keyword is not None:
+            filters.append(Provider.provider_name.icontains(keyword))
+
         skip = (page - 1) * size
         query = await self.db.execute(
             select(Provider)
-            .where(Provider.status == 1)
+            .where(*filters)
             .order_by(Provider.id)
             .offset(skip)
             .limit(size)
@@ -29,8 +35,16 @@ class ProviderService:
         if not result:
             raise NotFound("展示列表为空")
 
+        total = (
+            await self.db.execute(
+                select(func.count())
+                .select_from(Provider)
+                .where(Provider.status == 1)
+            )
+        ).scalar_one()
+
         items = [to_provider(row) for row in result]
-        return info(data=items)
+        return info(data=items,total=total)
 
     # 供应商详情：原来只是 HomeService.get_id 的内部方法，现在单独暴露成接口
     async def get_provider_detail(
@@ -51,19 +65,22 @@ class ProviderService:
         provider = await self._get_enabled_provider(provider_code)
 
         mod = ModelService(db=self.db)
-        mod_data = (
+        mod_info = (
             await mod.get_model_list(
                 provider_code=provider_code,
                 page=1,
                 size=5,
             )
-        ).get("data").get("models_data")
+        )
+
+        mod_data = mod_info.get("data").get("models_data")
+        total = mod_info.get("total")
 
         data = {
             "provider": to_provider(provider),
             "models_data": mod_data,
         }
-        return info(data=data)
+        return info(data=data,total=total)
 
     # 按 provider_code 取启用的供应商，找不到直接抛 NotFound
     async def _get_enabled_provider(
