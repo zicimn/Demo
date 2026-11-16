@@ -1,0 +1,827 @@
+/* ============================================================
+   app/assets/css/ui.css —— 排版与动效层
+
+   职责划分：
+     main.css  设计变量 + 重置 + 基础排版 + 通用交互
+     ui.css    正文层级（hero / 标题刻度）、骨架屏、入场动效、
+               面包屑、数据可视化条
+
+   必须在 main.css 之后引入，因为此处大量引用其定义的 CSS 变量。
+   所有动效都受 prefers-reduced-motion 约束（见 main.css 末尾）。
+   ============================================================ */
+
+/* ---------- 1. 排版刻度 ---------- */
+/* 用固定的字号层级替代各处散落的 font-size，保证跨页面比例一致。
+   整体比初版上调一档：初版正文 0.94rem（约 15px）在小屏幕上偏小。 */
+:root {
+  --fs-2xs: 0.78rem;
+  --fs-xs: 0.84rem;
+  --fs-sm: 0.92rem;
+  --fs-base: 1.02rem;
+  --fs-md: 1.16rem;
+  --fs-lg: 1.5rem;
+  --fs-xl: 2.1rem;
+  --fs-2xl: 2.7rem;
+}
+
+/* 小号引导文字：全大写/加宽字距，用于 hero 顶部的分类说明 */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 var(--sp-2);
+  color: var(--c-primary);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+/* 引导文字前的小圆点 */
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: currentColor;
+}
+
+/* ---------- 2. Hero 区（全宽出血） ---------- */
+/*
+  用 --page-gutter 的负左右外边距做出血：Hero 铺满整个视口宽度，
+  内部 .page-hero__inner 再对齐 1320px 内容栅格。
+  这样首屏是一整条渐变带，而不是一张圆角卡片——落地页观感强得多。
+  底部大圆角 + 边框收边，与下方毛玻璃容器形成层次。
+*/
+.page-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-inline: calc(-1 * var(--page-gutter));
+  margin-bottom: 44px;
+  padding: 76px 0 92px;
+  border-bottom: 1px solid var(--c-border);
+  border-radius: 0 0 40px 40px;
+  background: radial-gradient(
+      120% 120% at 12% 0%,
+      rgba(37, 99, 235, 0.16) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      110% 130% at 92% 8%,
+      rgba(124, 58, 237, 0.18) 0%,
+      transparent 52%
+    ),
+    linear-gradient(160deg, #f4f8ff 0%, #eef3ff 45%, #f7f2ff 100%);
+}
+
+.page-hero__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 44px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-inline: calc(var(--page-gutter) + 24px);
+}
+
+/* 点阵纹理：极淡，只在上半部分可见，增加质感但不干扰阅读 */
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(37, 99, 235, 0.16) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
+  pointer-events: none;
+}
+
+/* 两个模糊光球：制造色彩层次，比纯色块更有空间感 */
+.hero-orb {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(52px);
+  opacity: 0.6;
+  pointer-events: none;
+  /* 缓慢漂移：让静态页面有一点"呼吸"，幅度控制在 18px 内不抢注意力 */
+  animation: orb-float 14s ease-in-out infinite alternate;
+}
+
+.hero-orb--1 {
+  top: -100px;
+  right: 4%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, #93c5fd, transparent 70%);
+}
+
+.hero-orb--2 {
+  bottom: -120px;
+  left: 8%;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, #c4b5fd, transparent 70%);
+  animation-duration: 18s;
+  animation-delay: -6s;
+}
+
+@keyframes orb-float {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-18px, 22px, 0) scale(1.08);
+  }
+}
+
+/* 小号引导文字：加宽字距，与正文拉开层次 */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 var(--sp-3);
+  color: var(--c-primary);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: currentColor;
+}
+
+/* 主标题：用 clamp 随视口缩放，负字距让大字更紧凑有力 */
+.page-title {
+  margin: 0;
+  font-size: clamp(2.4rem, 5.4vw, 3.9rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1.6px;
+  color: var(--c-text-1);
+}
+
+.page-title em {
+  font-style: normal;
+  background: linear-gradient(100deg, #2563eb 10%, #7c3aed 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.page-subtitle {
+  max-width: 38em;
+  margin: var(--sp-4) 0 0;
+  color: var(--c-text-2);
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+/* 主操作行 */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin-top: 30px;
+}
+
+.btn--lg {
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 1.06rem;
+}
+
+.hero-count {
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+
+.hero-count strong {
+  color: var(--c-text-1);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .page-hero {
+    padding: 44px 0 60px;
+    border-radius: 0 0 26px 26px;
+  }
+
+  .page-hero__inner {
+    padding-inline: var(--page-gutter);
+    gap: 32px;
+  }
+
+  .page-title {
+    letter-spacing: -0.6px;
+  }
+
+  .hero-orb {
+    filter: blur(40px);
+    opacity: 0.45;
+  }
+}
+
+/* 锚点跳转时为吸顶导航留出空间 */
+#provider-list {
+  scroll-margin-top: 88px;
+}
+
+/* Hero 内的数据条与快捷键提示 */
+.hero-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(37, 99, 235, 0.14);
+}
+
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-stat strong {
+  color: var(--c-text-1);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-stat span {
+  color: var(--c-text-3);
+  font-size: 0.8rem;
+  letter-spacing: 0.2px;
+}
+
+/* 首页底部的特性区：三张并列说明卡 */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  max-width: 1320px;
+  margin: 40px auto 0;
+}
+
+.feature-card {
+  padding: 28px 26px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  transition: transform 0.22s ease, box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.feature-card:hover {
+  border-color: var(--c-border-strong);
+  box-shadow: var(--sh-md);
+  transform: translateY(-3px);
+}
+
+.feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--c-primary-weak);
+  color: var(--c-primary);
+}
+
+.feature-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.feature-title {
+  margin: 0 0 6px;
+  color: var(--c-text-1);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.feature-desc {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+
+html[data-theme='dark'] .feature-card {
+  background: rgba(16, 24, 39, 0.62);
+}
+
+html[data-theme='dark'] .hero-stats {
+  border-top-color: rgba(96, 165, 250, 0.2);
+}
+
+/* ---------- 3. Hero 右侧预览卡 ---------- */
+/*
+  首屏需要一个「视觉重心」：纯文字排版再大也只是文字。
+  这里放两张叠放的供应商卡示意，用真实数据填充，既不造假
+  也能让首屏立刻看起来像产品而不是文档。
+*/
+.hero-content {
+  min-width: 0;
+}
+
+.hero-preview {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  /* 两栏：左文案、右预览，视觉重心落在右侧卡片堆 */
+  .page-hero__inner {
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 48px;
+  }
+
+  .hero-preview {
+    position: relative;
+    display: block;
+    height: 190px;
+  }
+
+  .preview-card {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 300px;
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 16px 34px rgba(16, 24, 40, 0.1);
+  }
+
+  /* 两张卡错开叠放并轻微旋转，制造层次；
+     位移幅度不同（12px vs 22px）形成前后景视差 */
+  .preview-card:first-child {
+    top: 6px;
+    right: 0;
+    z-index: 2;
+    transform: translate3d(
+        calc(var(--px, 0) * 12px),
+        calc(var(--py, 0) * 12px),
+        0
+      )
+      rotate(-2.5deg);
+    will-change: transform;
+  }
+
+  .preview-card--offset {
+    right: 30px;
+    bottom: 4px;
+    z-index: 1;
+    opacity: 0.9;
+    transform: translate3d(
+        calc(var(--px, 0) * 22px),
+        calc(var(--py, 0) * 22px),
+        0
+      )
+      rotate(2deg);
+    will-change: transform;
+  }
+
+  .preview-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: var(--r-full);
+    background: linear-gradient(135deg, #dbeafe, #e0eaff);
+    color: var(--c-primary);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* 头像图为圆形透明 WebP，撑满容器即可 */
+  .preview-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-avatar--b {
+    background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+    color: #7c3aed;
+  }
+
+  .preview-name {
+    margin: 0;
+    color: var(--c-text-1);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .preview-code {
+    margin: 1px 0 0;
+    color: var(--c-text-3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+  }
+
+  .preview-badge {
+    margin-left: auto;
+    padding: 2px 9px;
+    border-radius: var(--r-full);
+    background: var(--c-primary-weak);
+    color: var(--c-primary);
+    font-size: 0.68rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+html[data-theme='dark'] .preview-card {
+  background: rgba(17, 24, 39, 0.82);
+  border-color: rgba(148, 163, 184, 0.18);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme='dark'] .preview-avatar {
+  background: linear-gradient(135deg, #16233a, #1b2a45);
+}
+
+html[data-theme='dark'] .preview-avatar--b {
+  background: linear-gradient(135deg, #241c3d, #1e1b3a);
+  color: #c4b5fd;
+}
+
+/* ---------- 4. 面包屑 ---------- */
+/* 层级导航：当前页为最后一项，不可点击，用字重区分 */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: var(--sp-4);
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}
+
+.breadcrumb a {
+  color: var(--c-text-2);
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.breadcrumb a:hover {
+  color: var(--c-primary);
+}
+
+.breadcrumb .sep {
+  color: var(--c-border-strong);
+  user-select: none;
+}
+
+.breadcrumb .current {
+  color: var(--c-text-1);
+  font-weight: 500;
+}
+
+/* ---------- 4. 骨架屏 ---------- */
+/* 加载中直接预示最终卡片结构（头像 + 两行），比整块灰块更接近真实布局 */
+.skeleton-grid {
+  display: grid;
+  /* 与真实网格保持一致用 auto-fit，骨架与成品的列宽过渡才自然 */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  height: 210px;
+  padding: 30px 22px 24px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+}
+
+.skeleton-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-full);
+  background: #eef1f6;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: var(--r-sm);
+  background: #eef1f6;
+}
+
+.skeleton-line--title {
+  width: 62%;
+  margin-top: 6px;
+}
+
+.skeleton-line--sub {
+  width: 40%;
+  height: 9px;
+}
+
+/* 扫光动画：用左右位移的渐变制造「正在加载」的流动感 */
+.skeleton-card,
+.skeleton-avatar,
+.skeleton-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-card::after,
+.skeleton-avatar::after,
+.skeleton-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.85) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* 骨架屏配套的读屏/降级文案：视觉上弱化，但不隐藏 */
+.loading-note {
+  margin: var(--sp-4) 0 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+/* ---------- 5. 入场动效 ---------- */
+/* 上浮淡入。--i 由模板按序号注入，实现错峰出现 */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 通用错峰类：需要自动画时给元素加 .stagger 并设置 --i */
+.stagger {
+  animation: fade-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/*
+  首页卡片入场：以选择器挂动效，而不给卡片加额外 class。
+  原因：provider-tile 这个类名被测试用例作为实测结果记录（计数 3），
+  保持其 class 属性不被污染，避免动效改动连带失效既有断言。
+*/
+/* 卡片入场只做透明度渐变：
+   位移交给 FLIP（排序时用 Web Animations 直接控制 transform），
+   两者都写 transform 会互相覆盖，导致排序动画失效。 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.provider-grid > .provider-tile {
+  animation: fade-in 0.42s ease both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* ---------- 6. 数据可视化条 ---------- */
+/* 用于定价表中直观比较各条目价格高低 */
+.mini-bar {
+  display: block;
+  height: 3px;
+  margin-top: 7px;
+  border-radius: var(--r-full);
+  background: #eef1f6;
+  overflow: hidden;
+}
+
+.mini-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-primary);
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mini-bar > i.is-peak {
+  background: var(--c-danger);
+}
+
+.mini-bar > i.is-offpeak {
+  background: var(--c-success);
+}
+
+/* ---------- 7. 区块分隔 ---------- */
+/* 用于长页面中区分信息组，比单纯加大间距更有结构感 */
+.divider {
+  height: 1px;
+  margin: var(--sp-6) 0;
+  border: none;
+  background: linear-gradient(
+    90deg,
+    var(--c-border) 0%,
+    transparent 100%
+  );
+}
+
+/* ---------- 8. 关键指标条 ---------- */
+/* 模型详情顶部：把最常被比较的两三个参数提到最前面 */
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.metric {
+  padding: 13px 16px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-2);
+}
+
+.metric-label {
+  margin: 0 0 3px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.3px;
+}
+
+.metric-value {
+  margin: 0;
+  color: var(--c-text-1);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 9. 滚动揭示 ---------- */
+/*
+  隐藏态只作用于 .reveal 类，而该类完全由 v-reveal 指令在客户端挂载时添加。
+  因此无 JS 时元素不带 .reveal，始终可见——不会出现内容永久隐藏。
+*/
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 减少动效偏好下直接呈现，不做位移 */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- 10. 卡片网格细节 ---------- */
+/*
+  所有卡片严格等宽等高——不按位置放大某一张。
+  此前用 :first-child 跨两列会让首个供应商显得「被推荐」，
+  但列表顺序只是接口返回顺序，没有推荐语义，属于误导性视觉层级。
+  强调信息应交给内容本身（能力、价格），而不是卡片的尺寸。
+*/
+.provider-grid > .provider-tile {
+  position: relative;
+}
+
+/* 顶部渐变装饰条：hover 时淡入，作为「可点」的额外暗示 */
+.provider-grid > .provider-tile::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.provider-grid > .provider-tile:hover::before {
+  opacity: 1;
+}
+
+/* 头像轻微放大：给 hover 一点生命感，幅度控制在 6% 内不引起布局跳动 */
+.provider-grid > .provider-tile .tile-avatar,
+.provider-grid > .provider-tile .tile-icon {
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.26s ease;
+}
+
+.provider-grid > .provider-tile:hover .tile-avatar,
+.provider-grid > .provider-tile:hover .tile-icon {
+  transform: scale(1.06);
+}
+
+/* hover 时的描边微光：比单纯加深阴影更有"被点亮"的感觉 */
+.provider-grid > .provider-tile:hover {
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14),
+    0 2px 6px rgba(16, 24, 40, 0.05);
+}
+
+/* ---------- 11. 暗色补偿 ---------- */
+/* hero、骨架、数据条、分隔线在暗色下需要单独调色 */
+
+html[data-theme='dark'] .page-hero {
+  border-color: var(--c-border);
+  background-image: radial-gradient(
+      120% 140% at 100% 0%,
+      rgba(99, 102, 241, 0.22) 0%,
+      transparent 55%
+    ),
+    linear-gradient(135deg, #0e1726 0%, #131f33 100%);
+}
+
+html[data-theme='dark'] .page-title em {
+  background: linear-gradient(100deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html[data-theme='dark'] .skeleton-card {
+  background: var(--c-surface);
+}
+
+html[data-theme='dark'] .skeleton-line {
+  background: var(--c-skeleton);
+}
+
+html[data-theme='dark'] .skeleton-card::after,
+html[data-theme='dark'] .skeleton-line::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 100%
+  );
+}
+
+html[data-theme='dark'] .mini-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme='dark'] .eyebrow {
+  color: var(--c-primary);
+}
+

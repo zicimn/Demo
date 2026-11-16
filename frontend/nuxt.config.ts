@@ -14,13 +14,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   /**
-   * 全局样式入口。
-   * 此处引入的样式对所有页面生效（不受 scoped 限制），用于承载
-   * CSS 重置、跨页面复用的容器类与路由过渡动画的类名。
-   * 路径中的 `~` 指向 srcDir，Nuxt 4 默认为 app/，
-   * 因此实际解析到 app/assets/css/main.css。
+   * 全局样式入口。按职责拆成两层，数组顺序即层叠顺序：
+   *   main.css  设计变量、重置、基础排版、通用交互、路由过渡
+   *   ui.css    hero 与标题刻度、面包屑、骨架屏、入场动效、数据条
+   * ui.css 依赖 main.css 中的 CSS 变量，故必须排在其后。
+   * 路径中的 `~` 指向 srcDir，Nuxt 4 默认为 app/。
    */
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/ui.css'],
 
   app: {
     /**
@@ -34,6 +34,35 @@ export default defineNuxtConfig({
         {
           name: 'description',
           content: 'AIWiki：按供应商浏览 AI 模型的能力、上下文长度与定价。',
+        },
+        /** 移动端浏览器地址栏配色，与深色导航栏一致 */
+        { name: 'theme-color', content: '#0d1524' },
+        /** 声明同时支持明暗两套配色，让原生控件跟随主题 */
+        { name: 'color-scheme', content: 'light dark' },
+        {
+          property: 'og:title',
+          content: 'AIWiki - AI 模型能力与定价速查',
+        },
+        {
+          property: 'og:description',
+          content: '按供应商浏览 AI 模型的能力、上下文长度与峰谷定价。',
+        },
+        { property: 'og:type', content: 'website' },
+      ],
+      /**
+       * 首屏主题防闪烁脚本。
+       *
+       * 必须内联并置于 <head>：浏览器解析 <html> 后、样式生效前就写入
+       * data-theme，否则会先按亮色绘制一帧再切暗色，出现明显白闪。
+       * 逻辑与 composables/useTheme.ts 的 init() 保持一致：
+       * 用户上次选择 > 系统偏好 > 亮色；任何异常都回退为亮色。
+       */
+      script: [
+        {
+          key: 'theme-init',
+          tagPosition: 'head',
+          innerHTML:
+            "(function(){try{var k='aiwiki-theme',s=localStorage.getItem(k),d=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=(s==='light'||s==='dark')?s:(d?'dark':'light');}catch(e){document.documentElement.dataset.theme='light';}})();",
         },
       ],
     },
