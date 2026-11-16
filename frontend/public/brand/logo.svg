@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="AIWiki">
+  <defs>
+    <linearGradient id="brandGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6" />
+      <stop offset="1" stop-color="#6366f1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 渐变圆角底 -->
+  <rect width="64" height="64" rx="16" fill="url(#brandGradient)" />
+
+  <!-- 主体字 A：用折线绘制，笔画端点圆角，避免尖锐感 -->
+  <path
+    d="M20 46 L32 18 L44 46"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- A 的横杠 -->
+  <path
+    d="M25.5 37 H38.5"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="4.5"
+    stroke-linecap="round"
+  />
+
+  <!-- 右上角节点：呼应「模型网络」的概念 -->
+  <circle cx="49" cy="17" r="3.5" fill="#a5b4fc" />
+</svg>
